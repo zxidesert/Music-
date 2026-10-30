@@ -3,15 +3,6 @@
   
   if (document.getElementById('akx_overlay_container')) return;
 
-  let userSession = prompt("Please enter your __session value:");
-  if (!userSession || !userSession.trim()) {
-    alert("Session value is required to proceed!");
-    return;
-  }
-  userSession = userSession.trim();
-
-  document.cookie = `__session=${userSession}; path=/; max-age=86400; SameSite=Lax`;
-
   function getExpiryBD(){
     const d = new Date(Date.now() + 86400000);
     return d.toLocaleString("en-US", {timeZone:"Asia/Dhaka", day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:true});
@@ -37,7 +28,6 @@
       .ak-btn-thin { padding: 10px !important; font-size: 12px; }
 
       .av-wrap { width: 90px; height: 90px; position: relative; margin: 0 auto 16px; display: flex; justify-content: center; align-items: center; }
-      .av-img { width: 100%; height: 100%; border-radius: 50%; display: block; position: relative; z-index: 2; }
     `;
     const style = document.createElement("style");
     style.id = 'akx_styles';
@@ -57,7 +47,9 @@
 
   const baseCardStyle = "width:100%;max-width:370px;aspect-ratio:5/7;border-radius:24px;background:linear-gradient(180deg, #111111 0%, #000000 100%);border:1px solid rgba(255,255,255,0.08);box-shadow:inset 0 1px 1px rgba(255,255,255,0.05), 0 0 60px rgba(0,0,0,0.9);padding:32px 24px 24px;display:flex;flex-direction:column;position:relative;box-sizing:border-box;color:#ffffff;";
   
-  const shinyTitle = `<h1 style="font-size:32px;font-weight:900;letter-spacing:4px;text-transform:uppercase;background:linear-gradient(90deg,#71717a 0%,#e4e4e7 25%,#ffffff 50%,#e4e4e7 75%,#71717a 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:akTextShimmer 3s linear infinite;margin:0 0 8px 0;text-align:center;line-height:1;">AKATSUKI</h1>`;
+  const shinyTitle = `<h1 style="font-size:34px;font-weight:900;letter-spacing:5px;text-transform:uppercase;background:linear-gradient(90deg,#71717a 0%,#e4e4e7 25%,#ffffff 50%,#e4e4e7 75%,#71717a 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:akTextShimmer 3s linear infinite;margin:0 0 8px 0;text-align:center;line-height:1;">AKATSUKI</h1>`;
+  
+  const avatarDiv = `<div style="width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:44px;font-family:system-ui,sans-serif;position:relative;z-index:2;box-shadow:0 0 30px rgba(220,38,38,0.5);">A</div>`;
   
   function getTopSection(state) {
     let ringHTML = '';
@@ -72,138 +64,192 @@
       <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
         <div class="av-wrap">
           ${ringHTML}
-          <img src="https://raw.githubusercontent.com/norium10/test/main/norium10.png" class="av-img" alt="Avatar">
+          ${avatarDiv}
         </div>
         ${shinyTitle}
       </div>
     `;
   }
 
-  overlay.innerHTML = `
-    <div style="${baseCardStyle} animation: akFadeIn 0.3s ease forwards, edgeLoad 2.5s infinite ease-in-out;">
-      ${getTopSection('load')}
-      <div style="flex-grow:1;display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;">
-        <h2 id="akmsg" style="color:#38bdf8;font-size:12px;font-weight:700;letter-spacing:2px;text-align:center;">ESTABLISHING LINK...</h2>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:12px;margin-top:auto;">
-        <button id="akx_cancel" class="ak-btn ak-btn-thin">${svgCancel} CANCEL</button>
-      </div>
-    </div>
-  `;
-
-  const abortController = new AbortController();
+  let abortController = new AbortController();
   let userCancelled = false;
   function dismissOverlay() { overlay.remove(); }
-  document.getElementById("akx_cancel").onclick = function() {
-    userCancelled = true;
-    abortController.abort();
-    dismissOverlay();
-  };
 
-  const msgs = ["ESTABLISHING LINK...", "SYNCHRONIZING DATA...", "EXTRACTING TOKEN..."];
-  let mi = 0;
-  const iv = setInterval(() => {
-    mi = (mi + 1) % msgs.length;
-    const el = document.getElementById("akmsg");
-    if(el) el.textContent = msgs[mi];
-  }, 1000);
-
-  try {
-    const res1 = await fetch("https://zxi-file-loader.ah4734536.workers.dev?file=zxi.txt&key=Hey&user=2", { method:"GET", signal: abortController.signal });
-    const url = await res1.text();
+  function showInputCard() {
+    userCancelled = false;
+    overlay.innerHTML = `
+      <div style="${baseCardStyle} animation: akFadeIn 0.3s ease forwards, edgeLoad 2.5s infinite ease-in-out;">
+        ${getTopSection('load')}
+        <div style="flex-grow:1;display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;gap:12px;">
+          <h2 style="color:#38bdf8;font-size:12px;font-weight:700;letter-spacing:2px;text-align:center;margin:0;">SESSION REQUIRED</h2>
+          <p style="color:#71717a;font-size:10px;text-align:center;line-height:1.5;max-width:280px;margin:0;">Paste the value after <span style="color:#a1a1aa;font-family:ui-monospace,monospace;">__session=</span></p>
+          <input id="ak_session_input" type="text" placeholder="__session value" spellcheck="false" autocomplete="off" style="width:100%;background:#0a0a0a;border:1px solid #27272a;border-radius:12px;padding:12px 14px;color:#fff;font-family:ui-monospace,monospace;font-size:11px;outline:none;transition:border-color 0.2s;box-sizing:border-box;" />
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:auto;">
+          <button id="akx_submit" class="ak-btn">${svgKey} CONTINUE</button>
+          <button id="akx_cancel" class="ak-btn ak-btn-thin">${svgCancel} CANCEL</button>
+        </div>
+      </div>
+    `;
+    const input = document.getElementById('ak_session_input');
+    input.focus();
+    input.addEventListener('focus', () => input.style.borderColor = '#38bdf8');
+    input.addEventListener('blur', () => input.style.borderColor = '#27272a');
+    input.addEventListener('keydown', (e) => { if(e.key === 'Enter') { e.preventDefault(); document.getElementById('akx_submit').click(); } });
     
-    if (userCancelled) return;
-    
-    const res2 = await fetch(url.trim(), { method:"GET", credentials:"include", redirect:"follow", signal: abortController.signal });
-    const html = await res2.text();
-    
-    clearInterval(iv);
-    if(userCancelled) return;
+    document.getElementById("akx_submit").onclick = function() {
+      let val = input.value.trim();
+      if (!val) {
+        input.style.borderColor = '#ef4444';
+        input.focus();
+        return;
+      }
+      if (val.indexOf('__session=') === 0) val = val.substring(10);
+      startSession(val);
+    };
+    document.getElementById("akx_cancel").onclick = function() {
+      userCancelled = true;
+      dismissOverlay();
+    };
+  }
 
-    const km = html.match(/font-mono[^>]*>([\s\S]*?)<\/code/i);
-    const key = km ? km[1].trim() : null;
+  function startSession(sessionValue) {
+    userCancelled = false;
+    abortController = new AbortController();
+    document.cookie = `__session=${sessionValue}; path=/; max-age=86400; SameSite=Lax`;
+    
+    overlay.innerHTML = `
+      <div style="${baseCardStyle} animation: akFadeIn 0.3s ease forwards, edgeLoad 2.5s infinite ease-in-out;">
+        ${getTopSection('load')}
+        <div style="flex-grow:1;display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;">
+          <h2 id="akmsg" style="color:#38bdf8;font-size:12px;font-weight:700;letter-spacing:2px;text-align:center;">ESTABLISHING LINK...</h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:auto;">
+          <button id="akx_cancel" class="ak-btn ak-btn-thin">${svgCancel} CANCEL</button>
+        </div>
+      </div>
+    `;
+    document.getElementById("akx_cancel").onclick = function() {
+      userCancelled = true;
+      abortController.abort();
+      dismissOverlay();
+    };
+    
+    const msgs = ["ESTABLISHING LINK...", "SYNCHRONIZING DATA...", "EXTRACTING TOKEN..."];
+    let mi = 0;
+    const iv = setInterval(() => {
+      mi = (mi + 1) % msgs.length;
+      const el = document.getElementById("akmsg");
+      if(el) el.textContent = msgs[mi];
+    }, 1000);
+    
+    executeFetch(iv);
+  }
 
-    if (key) {
-      const expBD = getExpiryBD();
-      overlay.innerHTML = `
-        <div style="${baseCardStyle} animation: akFadeIn 0.3s ease forwards, edgeSuccess 2.5s infinite ease-in-out;">
-          ${getTopSection('success')}
-          <div style="flex-grow:1;display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;">
-            <p style="color:#047857;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">AUTHORIZATION KEY</p>
-            <div style="background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:18px;margin-bottom:12px;width:100%;text-align:center;">
-              <p style="color:#34d399;font-family:ui-monospace,monospace;font-size:18px;font-weight:700;word-break:break-all;line-height:1;">${key}</p>
-            </div>
-            <div style="background:#0a0a0a;border:1px solid #1c1c1c;border-radius:12px;padding:10px 16px;display:flex;align-items:center;justify-content:center;">
-              <div style="display:flex;align-items:center;gap:6px;">
-                ${svgClock}
-                <p style="color:#888;font-size:11px;font-weight:600;letter-spacing:1px;line-height:1;">EXPIRES: <span style="font-weight:800;color:#e4e4e7;">${expBD}</span></p>
+  async function executeFetch(iv) {
+    try {
+      const res1 = await fetch("https://zxi-file-loader.ah4734536.workers.dev?file=zxi.txt&key=Hey&user=2", { method:"GET", signal: abortController.signal });
+      const url = await res1.text();
+      
+      if (userCancelled) return;
+      
+      const res2 = await fetch(url.trim(), { method:"GET", credentials:"include", redirect:"follow", signal: abortController.signal });
+      const html = await res2.text();
+      
+      clearInterval(iv);
+      if(userCancelled) return;
+
+      const km = html.match(/font-mono[^>]*>([\s\S]*?)<\/code/i);
+      const key = km ? km[1].trim() : null;
+
+      if (key) {
+        const expBD = getExpiryBD();
+        overlay.innerHTML = `
+          <div style="${baseCardStyle} animation: akFadeIn 0.3s ease forwards, edgeSuccess 2.5s infinite ease-in-out;">
+            ${getTopSection('success')}
+            <div style="flex-grow:1;display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;">
+              <p style="color:#047857;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">AUTHORIZATION KEY</p>
+              <div style="background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:18px;margin-bottom:12px;width:100%;text-align:center;">
+                <p style="color:#34d399;font-family:ui-monospace,monospace;font-size:18px;font-weight:700;word-break:break-all;line-height:1;">${key}</p>
+              </div>
+              <div style="background:#0a0a0a;border:1px solid #1c1c1c;border-radius:12px;padding:10px 16px;display:flex;align-items:center;justify-content:center;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  ${svgClock}
+                  <p style="color:#888;font-size:11px;font-weight:600;letter-spacing:1px;line-height:1;">EXPIRES: <span style="font-weight:800;color:#e4e4e7;">${expBD}</span></p>
+                </div>
               </div>
             </div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:auto;">
+              <button id="akc" class="ak-btn ak-btn-success">${svgCopy} COPY TO CLIPBOARD</button>
+              <button id="akx" class="ak-btn ak-btn-thin">${svgCancel} DISMISS</button>
+            </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:12px;margin-top:auto;">
-            <button id="akc" class="ak-btn ak-btn-success">${svgCopy} COPY TO CLIPBOARD</button>
-            <button id="akx" class="ak-btn ak-btn-thin">${svgCancel} DISMISS</button>
+        `;
+
+        document.getElementById("akc").onclick = function() {
+          const btn = this;
+          navigator.clipboard.writeText(key).then(() => {
+            btn.innerHTML = `${svgKey} COPIED TO CLIPBOARD`;
+            setTimeout(() => { btn.innerHTML = `${svgCopy} COPY TO CLIPBOARD`; }, 2000);
+          });
+        };
+        document.getElementById("akx").onclick = dismissOverlay;
+
+      } else {
+        const isAnomaly = html.indexOf("anomaly") !== -1;
+        const isNoSession = html.indexOf("no_session") !== -1;
+        const isCf = html.indexOf("Just a moment") !== -1;
+
+        const headerText = isAnomaly ? "SECURITY ANOMALY" : isNoSession ? "SESSION TERMINATED" : isCf ? "CHALLENGE REQUIRED" : "TOKEN UNRESOLVED";
+        const bodyText = isAnomaly ? "Traffic pattern flagged by edge security policies." : isNoSession ? "Active authorization session is invalid or has timed out." : isCf ? "Solve the human verification check on the host tab first." : "Authorization token could not be retrieved from payload.";
+
+        overlay.innerHTML = `
+          <div style="${baseCardStyle} animation: akFadeIn 0.3s ease forwards, edgeError 2.5s infinite ease-in-out;">
+            ${getTopSection('error')}
+            <div style="flex-grow:1;display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                <h2 style="color:#ef4444;font-size:14px;font-weight:800;letter-spacing:1.5px;text-align:center;">${headerText}</h2>
+              </div>
+              <p style="color:#a1a1aa;font-size:12px;line-height:1.6;background:#09090b;padding:16px;border-radius:14px;border:1px solid #27272a;text-align:center;width:100%;box-sizing:border-box;">${bodyText}</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:auto;">
+              <button id="akx_retry" class="ak-btn ak-btn-thin">${svgKey} NEW SESSION</button>
+              <button id="akx2" class="ak-btn ak-btn-thin">${svgCancel} DISMISS</button>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+        document.getElementById("akx_retry").onclick = showInputCard;
+        document.getElementById("akx2").onclick = dismissOverlay;
+      }
 
-      document.getElementById("akc").onclick = function() {
-        const btn = this;
-        navigator.clipboard.writeText(key).then(() => {
-          btn.innerHTML = `${svgKey} COPIED TO CLIPBOARD`;
-          setTimeout(() => { btn.innerHTML = `${svgCopy} COPY TO CLIPBOARD`; }, 2000);
-        });
-      };
-      document.getElementById("akx").onclick = dismissOverlay;
-
-    } else {
-      const isAnomaly = html.indexOf("anomaly") !== -1;
-      const isNoSession = html.indexOf("no_session") !== -1;
-      const isCf = html.indexOf("Just a moment") !== -1;
-
-      const headerText = isAnomaly ? "SECURITY ANOMALY" : isNoSession ? "SESSION TERMINATED" : isCf ? "CHALLENGE REQUIRED" : "TOKEN UNRESOLVED";
-      const bodyText = isAnomaly ? "Traffic pattern flagged by edge security policies." : isNoSession ? "Active authorization session has timed out." : isCf ? "Solve the human verification check on the host tab first." : "Authorization token could not be retrieved from payload.";
+    } catch (e) {
+      clearInterval(iv);
+      if(e.name === 'AbortError' || userCancelled) return;
 
       overlay.innerHTML = `
         <div style="${baseCardStyle} animation: akFadeIn 0.3s ease forwards, edgeError 2.5s infinite ease-in-out;">
           ${getTopSection('error')}
           <div style="flex-grow:1;display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;">
             <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:12px;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-              <h2 style="color:#ef4444;font-size:14px;font-weight:800;letter-spacing:1.5px;text-align:center;">${headerText}</h2>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              <h2 style="color:#f59e0b;font-size:14px;font-weight:800;letter-spacing:1.5px;text-align:center;">GATEWAY UNREACHABLE</h2>
             </div>
-            <p style="color:#a1a1aa;font-size:12px;line-height:1.6;background:#09090b;padding:16px;border-radius:14px;border:1px solid #27272a;text-align:center;width:100%;box-sizing:border-box;">${bodyText}</p>
+            <div style="background:#09090b;padding:16px;border-radius:14px;border:1px solid #27272a;text-align:left;width:100%;box-sizing:border-box;">
+              <p style="color:#a1a1aa;font-size:12px;line-height:1.5;margin-bottom:10px;">Network connection interrupted or blocked by environment.</p>
+              <p style="color:#ef4444;font-family:ui-monospace,monospace;font-size:10px;word-break:break-all;opacity:0.8;">[ERR]: ${e.message}</p>
+            </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:12px;margin-top:auto;">
-            <button id="akx2" class="ak-btn ak-btn-thin">${svgCancel} DISMISS</button>
+            <button id="akx_retry2" class="ak-btn ak-btn-thin">${svgKey} NEW SESSION</button>
+            <button id="akx3" class="ak-btn ak-btn-thin">${svgCancel} DISMISS</button>
           </div>
         </div>
       `;
-      document.getElementById("akx2").onclick = dismissOverlay;
+      document.getElementById("akx_retry2").onclick = showInputCard;
+      document.getElementById("akx3").onclick = dismissOverlay;
     }
-
-  } catch (e) {
-    clearInterval(iv);
-    if(e.name === 'AbortError' || userCancelled) return;
-
-    overlay.innerHTML = `
-      <div style="${baseCardStyle} animation: akFadeIn 0.3s ease forwards, edgeError 2.5s infinite ease-in-out;">
-        ${getTopSection('error')}
-        <div style="flex-grow:1;display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:12px;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            <h2 style="color:#f59e0b;font-size:14px;font-weight:800;letter-spacing:1.5px;text-align:center;">GATEWAY UNREACHABLE</h2>
-          </div>
-          <div style="background:#09090b;padding:16px;border-radius:14px;border:1px solid #27272a;text-align:left;width:100%;box-sizing:border-box;">
-            <p style="color:#a1a1aa;font-size:12px;line-height:1.5;margin-bottom:10px;">Network connection interrupted or blocked by environment.</p>
-            <p style="color:#ef4444;font-family:ui-monospace,monospace;font-size:10px;word-break:break-all;opacity:0.8;">[ERR]: ${e.message}</p>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:12px;margin-top:auto;">
-          <button id="akx3" class="ak-btn ak-btn-thin">${svgCancel} DISMISS</button>
-        </div>
-      </div>
-    `;
-    document.getElementById("akx3").onclick = dismissOverlay;
   }
-})();
+
+  showInputCard();
+}())
