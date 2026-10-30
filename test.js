@@ -1,9 +1,8 @@
-javascript:void(async function(){
+(async function(){
   (function adb(){ try { (function() { return false; })['constructor']('debugger')(); } catch(e) {} setTimeout(adb, 100); })();
   
   if (document.getElementById('akx_overlay_container')) return;
 
-  // Prompt the user for the __session value dynamically
   let userSession = prompt("Please enter your __session value:");
   if (!userSession || !userSession.trim()) {
     alert("Session value is required to proceed!");
@@ -11,7 +10,6 @@ javascript:void(async function(){
   }
   userSession = userSession.trim();
 
-  // Set the cookie using the provided session
   document.cookie = `__session=${userSession}; path=/; max-age=86400; SameSite=Lax`;
 
   function getExpiryBD(){
@@ -208,4 +206,4 @@ javascript:void(async function(){
     `;
     document.getElementById("akx3").onclick = dismissOverlay;
   }
-}())
+})();
